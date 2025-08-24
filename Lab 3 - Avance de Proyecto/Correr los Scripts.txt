@@ -1,0 +1,18 @@
+# Correr el setup_apache_modules.sh
+
+sudo bash setup_apache_modules.sh all
+# o por pasos:
+# sudo bash setup_apache_modules.sh setup
+# sudo bash setup_apache_modules.sh test
+
+# Cuando termine, abre el reporte
+sudo less /root/apache_module_tests_report.md
+
+# --------------------------------------------
+
+#Dockerfile
+docker build -t apache-modules-lab .
+docker run -d --name apachelab -p 8080:80 -p 8443:443 apache-modules-lab
+docker exec -it apachelab bash -lc "/usr/local/bin/setup_apache_modules.sh test"
+docker cp apachelab:/root/apache_module_tests_report.md ./  # (opcional)
+

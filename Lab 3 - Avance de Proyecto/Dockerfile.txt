@@ -1,0 +1,50 @@
+Dockerfile
+# Imagen base Ubuntu (Debian/Ubuntu family)
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Paquetes necesarios: Apache, utilidades de test, WAF y DoS, y backend Python
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y \
+      apache2 apache2-utils \
+      openssl curl jq bc \
+      nghttp2-client \
+      libapache2-mod-security2 \
+      libapache2-mod-evasive \
+      python3; \
+    # OWASP CRS (puede no estar en todos los repos; no romper si falla)
+    apt-get install -y modsecurity-crs || true; \
+    rm -rf /var/lib/apt/lists/*
+
+# Proveer un "systemctl" compatible para el script dentro de Docker
+# - restart/reload -> apachectl -k graceful (o start si aún no corre)
+# - start/enable   -> no-op (éxito)
+RUN printf '#!/usr/bin/env bash\n' \
+         'cmd="$1"; svc="$2";\n' \
+         'if [ "$cmd" = "restart" ] || [ "$cmd" = "reload" ]; then\n' \
+         '  apachectl -k graceful || apachectl -k start || true; exit 0;\n' \
+         'elif [ "$cmd" = "start" ] || [ "$cmd" = "enable" ]; then\n' \
+         '  exit 0;\n' \
+         'else\n' \
+         '  exit 0;\n' \
+         'fi\n' > /usr/local/bin/systemctl \
+    && chmod +x /usr/local/bin/systemctl
+
+# Copiar script del repo
+WORKDIR /opt/apache-modules-lab
+COPY setup_apache_modules.sh /usr/local/bin/setup_apache_modules.sh
+RUN chmod +x /usr/local/bin/setup_apache_modules.sh
+
+# Configurar Apache y módulos en build (no hace falta arrancar el servicio aquí)
+RUN bash -lc '/usr/local/bin/setup_apache_modules.sh setup'
+
+# Exponer puertos web
+EXPOSE 80 443
+
+# Healthcheck sencillo
+HEALTHCHECK --interval=30s --timeout=5s --retries=5 CMD curl -fsS http://127.0.0.1/ || exit 1
+
+# Ejecutar Apache en primer plano
+CMD ["bash","-lc","apachectl -D FOREGROUND"]
