@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  sitio:
+    image: php:apache
+    container_name: sitio
+    ports:
+      - 8081:80
+    volumes:
+      - ./public_html:/var/www/html
+    networks:
+      - misitio-net
+
+  misitiodb:
+    image: mariadb:latest
+    container_name: misitiodb
+    volumes:
+      - websitedbvolume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "tiffer.123"
+      MYSQL_USER: "tiffer"
+      MYSQL_PASSWORD: "tiffer.123"
+      MYSQL_DATABASE: "misitiodb"
+    networks:
+      - misitio-net
+
+networks:
+  misitio-net:
+
+volumes:
+  websitedbvolume:
