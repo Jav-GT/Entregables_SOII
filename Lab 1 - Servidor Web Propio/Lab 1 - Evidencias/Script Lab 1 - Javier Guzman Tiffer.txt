@@ -1,0 +1,26 @@
+username:tiffer
+password: tifer6969
+
+#descargar script 2 desde el canal de teams u pegarlo en el user de ubuntu
+
+#correr script.sh
+sudo chmod u+x script.sh
+sudo chown jguzm:jguzm script.sh
+./script.sh
+
+sudo apt install net-tools
+sudo apt install default-jdk -y
+sudo apt install openssh-server
+
+git clone https://github.com/carlosandres-mendez/operativos.git
+cd operativos/sockets/
+javac --release 8 HTTPServer.java
+sudo java HTTPServer
+
+//Para editarlo: 
+vim HTTPServer.java
+
+sudo bash /etc/init.d/ssh start
+ssh jguzm
+
+
